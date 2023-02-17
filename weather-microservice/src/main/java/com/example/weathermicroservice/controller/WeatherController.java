@@ -4,6 +4,7 @@ import com.example.weathermicroservice.model.Main;
 import com.example.weathermicroservice.model.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +26,9 @@ public class WeatherController {
     private String urlWeather;
 
     @GetMapping("/")
-    public ResponseEntity<Main> getWeather(@RequestParam String lat, @RequestParam String lon){
+    @Cacheable(cacheNames = {"signature"}, key = "{#lat, #lon}", cacheManager = "defaultCacheManager")
+    public Main getWeather(@RequestParam String lat, @RequestParam String lon){
         String request = String.format("%s?lat=%s&lon=%s&units=metric&appid=%s", urlWeather, lat, lon, appId);
-        CacheControl control = CacheControl.maxAge(1, TimeUnit.MINUTES);
-        return ResponseEntity.ok().cacheControl(control).body(restTemplate.getForObject(request,Root.class).getMain());
+        return restTemplate.getForObject(request,Root.class).getMain();
     }
 }

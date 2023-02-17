@@ -4,6 +4,7 @@ import com.example.personmicroservice.model.Person;
 import com.example.personmicroservice.model.Weather;
 import com.example.personmicroservice.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -19,12 +20,17 @@ public class PersonController {
     @Autowired
     private PersonRepository repository;
     @Autowired
-    RestTemplate restTemplate;
+    private RestTemplate restTemplate;
+
+    @Value("${location.url}")
+    String url;
+
     @GetMapping("{id}/weather")
     public ResponseEntity<Weather> getWeather(@PathVariable int id){
         if(repository.existsById(id)){
             String location = repository.findById(id).get().getLocation();
-            Weather weather = restTemplate.getForObject("http://localhost:8083/weather?location=" + location, Weather.class);
+            String locURl = String.format("http://%s/weather?location" , url );
+            Weather weather = restTemplate.getForObject(locURl + location, Weather.class);
             return new ResponseEntity(weather,HttpStatus.OK);
         }
         return new ResponseEntity(null, HttpStatus.NOT_FOUND);
